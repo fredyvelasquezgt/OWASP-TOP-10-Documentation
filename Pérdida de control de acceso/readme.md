@@ -27,3 +27,43 @@ El control de acceso implementa el cumplimiento de políticas de modo que los us
 El control de acceso solo es efectivo si es implementado en el servidor (server-side) o en la API (caso serverless), donde el atacante no puede modificarlo ni manipular metadatos.
 
 ### Más soluciones
+
+- A excepción de los recursos públicos, denegar por defecto.
+
+- Implementar mecanismos de control de acceso una única vez y reutilizarlos en toda la app, incluyendo la minimización del uso de CORS.
+
+- El control de acceso debe implementar su cumplimiento a nivel de datos y no permitir que el usuario pueda crear, leer, actualizar o borrar cualquier dato.
+
+- Los modelos de dominio deben hacer cumplir los requisitos únicos de límite de negocio de aplicaciones.
+
+- Deshabilitar el listado de directorios del servidor web y asegurarse de que los archivos de metadatos (por ejemplo una carpeta .git) y archivos de respaldo no puedan ser accedidos a partir de la raíz del sitio web.
+
+- Registrar las fallas de control de acceso (loggin), alertando a los administradores cuando sea apropiado, por ejemplo, cuando hayan fallas repetidas.
+
+- Establecer límites a la tasa de accesos permitidos a APIs y controladores de forma de poder minimizar el daño provocado por herramientas automatizadas de ataque.
+
+- Los identificadores de sesiones deben invalidarse en el servidor luego de cerrar la sesión. Los tokens JWT deberían de ser preferiblemente de corta duración para minimizar la ventan de oportunidades de ataque. Para JWT de mayor duración, es recomendable seguir los estándares OAuth de revocación de acceso.
+
+> Tanto desarrolladores como personal de control de calidad deben de incluir pruebas funcionales de control de acceso tanto a nivel unitario como de integración.
+
+## Ejemplos de escenarios de ataque
+
+1. La aplicación utiliza datos no verificados en una llamada SQL que accede a información de una cuenta:
+
+```
+ pstmt.setString(1, request.getParameter("acct"));
+ ResultSet results = pstmt.executeQuery( );
+```
+
+Un atacante simplemente modifica el parametro 'acct' en el navegador para enviar el número de cuenta que desee. Si no es verificado correctamente, el atacante puede acceder a la cuenta de cualquier usuario.
+
+`https://example.com/app/accountInfo?acct=notmyacct`
+
+2. Un atacante simplemente navega a un URL especifico. Se deberían de requerir derechos de administrador para acceder a la página de administración.
+
+```
+ https://example.com/app/getappInfo
+ https://example.com/app/admin_getappInfo
+```
+
+Si un usuario no autenticado puede acceder a cualquiera de las páginas, es una falla. Si una persona que no es administrador puede acceder a la página de administración, esto es también una falla.
